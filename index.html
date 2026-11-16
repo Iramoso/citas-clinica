@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Citas en línea · Ayuda de hermano a hermano</title>
+<meta name="description" content="Pide tu cita en línea, consulta tu solicitud y administra tus citas.">
+<style>
+  :root{
+    --verde:#0F766E; --verde-osc:#0B5A53; --noche:#082F2C; --menta:#5EEAD4; --fondo:#F3F6F5;
+    --texto:#0F2A27; --gris:#5E7A75; --borde:#D3E0DC; --error:#C24545; --ambar:#B45309;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:var(--texto);background:var(--fondo);line-height:1.5}
+  [hidden]{display:none!important}
+  .aviso-config{background:#FBEBCB;color:#7A4A06;padding:10px 16px;text-align:center;font-size:14px;font-weight:600}
+
+  header.hero{background:linear-gradient(135deg,var(--noche) 0%,#0B4A45 55%,var(--verde) 100%);color:#fff;position:relative;overflow:hidden}
+  header.hero::before,header.hero::after{content:"";position:absolute;border-radius:50%;background:rgba(255,255,255,.06)}
+  header.hero::before{width:420px;height:420px;right:-120px;top:-160px}
+  header.hero::after{width:300px;height:300px;left:-100px;bottom:-170px}
+  .contenedor{max-width:1040px;margin:0 auto;padding:0 20px;position:relative;z-index:1}
+  nav.barra{display:flex;align-items:center;gap:12px;padding:22px 0;flex-wrap:wrap}
+  .logo{width:42px;height:42px;border-radius:14px;background:rgba(255,255,255,.16);display:grid;place-items:center}
+  .logo svg{width:24px;height:24px;stroke:#fff;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+  nav.barra b{font-size:18px;letter-spacing:.2px;margin-right:auto}
+  .pestanas{display:flex;gap:6px;background:rgba(255,255,255,.12);padding:5px;border-radius:14px}
+  .pestanas button{border:0;background:transparent;color:#D6EEE9;font:inherit;font-weight:700;font-size:14px;padding:9px 16px;border-radius:10px;cursor:pointer}
+  .pestanas button:hover{background:rgba(255,255,255,.12)}
+  .pestanas button.activa{background:#fff;color:var(--verde-osc)}
+  .hero-cuerpo{padding:30px 0 120px;max-width:640px}
+  .etiqueta{display:inline-block;background:rgba(94,234,212,.18);color:var(--menta);font-weight:700;font-size:13px;padding:6px 14px;border-radius:99px;margin-bottom:18px}
+  h1{font-size:clamp(30px,6vw,50px);line-height:1.08;margin:0 0 16px;letter-spacing:-.5px}
+  .hero p{font-size:18px;color:#CFEAE5;margin:0;max-width:540px}
+
+  main{margin-top:-84px;position:relative;z-index:2}
+  .tarjeta{background:#fff;border:1px solid #E3ECEA;border-radius:22px;box-shadow:0 18px 50px rgba(15,60,55,.12);padding:34px}
+  .formulario-grid{display:grid;grid-template-columns:1.25fr .75fr;gap:34px}
+  h2{margin:0 0 4px;font-size:26px}
+  h3{margin:0 0 12px;font-size:18px}
+  .sub{color:var(--gris);margin:0 0 22px}
+  .fila{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .campo{margin-bottom:16px}
+  label{display:block;font-weight:700;font-size:13px;color:var(--gris);margin-bottom:6px}
+  label .op{font-weight:500}
+  input,select,textarea{width:100%;font:inherit;color:var(--texto);background:#fff;border:1.5px solid var(--borde);border-radius:12px;padding:12px 14px;outline:none;transition:border-color .15s,box-shadow .15s}
+  textarea{resize:vertical;min-height:96px}
+  input:focus,select:focus,textarea:focus{border-color:var(--verde);box-shadow:0 0 0 4px rgba(15,118,110,.14)}
+  .invalido{border-color:var(--error)!important}
+  .error{color:var(--error);font-size:13px;margin-top:5px}
+  .consentimiento{display:flex;gap:10px;align-items:flex-start;font-size:14px;color:var(--gris);margin:6px 0 20px}
+  .consentimiento input{width:20px;height:20px;margin-top:2px;accent-color:var(--verde);flex:none}
+  .trampa{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+  button.enviar{width:100%;border:0;border-radius:14px;background:var(--verde);color:#fff;font:inherit;font-weight:800;font-size:17px;padding:15px;cursor:pointer;transition:background .15s}
+  button.enviar:hover{background:var(--verde-osc)}
+  button.enviar[disabled]{background:#9FB8B2;cursor:wait}
+  .alerta{border-radius:12px;padding:12px 14px;font-size:14px;margin-bottom:16px;display:none}
+  .alerta.visible{display:block}
+  .alerta.mal{background:#FDECEC;color:#8E1B1B}
+  .alerta.ok{background:#E3F4EF;color:#0B5A53}
+
+  .lateral{background:#F3FAF8;border-radius:18px;padding:24px;align-self:start}
+  .paso{display:flex;gap:12px;margin-bottom:16px}
+  .num{flex:none;width:30px;height:30px;border-radius:50%;background:var(--verde);color:#fff;font-weight:800;display:grid;place-items:center;font-size:14px}
+  .paso b{display:block}
+  .paso span{color:var(--gris);font-size:14px}
+  .contacto{border-top:1px dashed #BBD3CD;padding-top:14px;margin-top:6px;font-size:14px;color:var(--gris)}
+
+  #exito{display:none;text-align:center;padding:20px 8px}
+  #exito .palomita{width:78px;height:78px;border-radius:50%;background:#D5EFE9;display:grid;place-items:center;margin:0 auto 18px}
+  #exito .palomita svg{width:40px;height:40px;stroke:var(--verde);fill:none;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+  .resumen{display:inline-block;text-align:left;background:#F3FAF8;border-radius:16px;padding:18px 24px;margin:20px 0;min-width:min(100%,360px)}
+  .resumen div{display:flex;justify-content:space-between;gap:24px;padding:4px 0}
+  .resumen span{color:var(--gris)}
+  .secundario{background:#fff;color:var(--verde-osc);border:1.5px solid var(--borde);border-radius:14px;font:inherit;font-weight:700;padding:11px 20px;cursor:pointer}
+  .secundario:hover{background:#F1F6F5}
+  .primario{background:var(--verde);color:#fff;border:0;border-radius:14px;font:inherit;font-weight:700;padding:12px 22px;cursor:pointer}
+  .primario:hover{background:var(--verde-osc)}
+  .peligro{color:var(--error);border-color:#E7B7B7}
+  .peligro:hover{background:#FDF1F1}
+
+  /* ---- consulta y cuenta ---- */
+  .angosto{max-width:520px}
+  .chip{display:inline-block;font-weight:800;font-size:12px;padding:4px 12px;border-radius:99px}
+  .chip.Programada,.chip.Aceptada,.chip.Atendida{background:#D5EFE9;color:#0B5A53}
+  .chip.Reprogramada,.chip.Pendiente{background:#FBE7BE;color:#7A4A06}
+  .chip.Cancelada,.chip.Rechazada{background:#F8DADA;color:#8E1B1B}
+  .estado-caja{background:#F3FAF8;border-radius:16px;padding:20px;margin-top:18px}
+  .cuenta-cab{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+  .avisos{margin-bottom:20px}
+  .aviso{background:#FFF8E6;border:1px solid #F6DFA6;color:#6B4A06;border-radius:12px;padding:10px 14px;margin-bottom:8px;font-size:14px}
+  .aviso small{display:block;color:#9A7A2E}
+  .citas{display:grid;gap:12px;margin-bottom:26px}
+  .cita{display:flex;gap:16px;align-items:center;justify-content:space-between;border:1.5px solid var(--borde);border-radius:16px;padding:16px 18px;flex-wrap:wrap}
+  .cita.pasada{background:#FAFBFB}
+  .cita .quien b{display:block;font-size:17px}
+  .cita .quien span{color:var(--gris);font-size:14px}
+  .cita .acciones{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .cita .acciones button{padding:9px 14px;font-size:14px}
+  .vacio{color:var(--gris);padding:14px 0}
+  .contacto-links{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+  .contacto-links a{display:inline-flex;align-items:center;gap:6px;text-decoration:none;font-weight:800;font-size:14px;padding:9px 16px;border-radius:12px;background:var(--verde);color:#fff}
+  .contacto-links a.wa{background:#1FA855}
+  .contacto-links a:hover{filter:brightness(.92)}
+  .hero-contacto{margin-top:22px}
+  .hero-contacto .contacto-links a{background:rgba(255,255,255,.16);color:#fff;border:1px solid rgba(255,255,255,.28)}
+  .hero-contacto .contacto-links a.wa{background:#1FA855;border-color:#1FA855}
+  .hero-contacto small{display:block;color:#CFEAE5;margin-top:8px}
+  .sesion-banner{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:#E3F4EF;color:#0B5A53;border-radius:12px;padding:10px 14px;font-size:14px;margin-bottom:16px}
+  .enlace{background:none;border:0;color:var(--verde-osc);font:inherit;font-weight:700;text-decoration:underline;cursor:pointer;padding:0}
+  .nota{font-size:13px;color:var(--ambar);max-width:280px;line-height:1.35}
+  .folio-chip{display:inline-block;background:#E3F4EF;color:var(--verde-osc);font-weight:800;font-size:12px;padding:2px 9px;border-radius:99px;margin-left:4px}
+  .modal{position:fixed;inset:0;background:rgba(8,47,44,.55);display:none;place-items:center;z-index:50;padding:16px}
+  .modal.abierto{display:grid}
+  .modal .caja{background:#fff;border-radius:20px;padding:26px;max-width:440px;width:100%;box-shadow:0 30px 80px rgba(0,0,0,.35)}
+  .modal .botones{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap}
+
+  footer{max-width:1040px;margin:34px auto 40px;padding:0 20px;color:var(--gris);font-size:13px;text-align:center}
+
+  @media (max-width:820px){
+    .formulario-grid{grid-template-columns:1fr}
+    .tarjeta{padding:24px 18px}
+    .fila{grid-template-columns:1fr}
+    .hero-cuerpo{padding-bottom:110px}
+    .pestanas{width:100%;overflow-x:auto}
+  }
+</style>
+</head>
+<body>
+
+<div id="avisoConfig" class="aviso-config" style="display:none">
+  Falta configurar Firebase: abre este archivo y llena PROJECT_ID y API_KEY en la sección «CONFIGURACIÓN».
+</div>
+
+<header class="hero">
+  <div class="contenedor">
+    <nav class="barra">
+      <div class="logo"><svg viewBox="0 0 24 24"><path d="M12 20.5C4 14.5 2.5 10.5 4.5 7.2 6.3 4.3 10.3 4.6 12 7.8c1.7-3.2 5.7-3.5 7.5-.6 2 3.3.5 7.3-7.5 13.3Z"/></svg></div>
+      <b id="nombreOrg">Ayuda de hermano a hermano</b>
+      <div class="pestanas" role="tablist">
+        <button type="button" data-seccion="cita" class="activa">Pedir cita</button>
+        <button type="button" data-seccion="consulta">Consultar solicitud</button>
+        <button type="button" data-seccion="cuenta" id="btnCuenta">Mi cuenta</button>
+      </div>
+    </nav>
+    <div class="hero-cuerpo">
+      <span class="etiqueta">Citas en línea</span>
+      <h1 id="tituloHero">Agenda tu cita sin llamadas ni filas</h1>
+      <p id="textoHero">Déjanos tus datos y el horario que prefieres. Nuestro equipo revisa tu solicitud y te confirma por teléfono o WhatsApp.</p>
+      <div class="hero-contacto" id="heroContacto" hidden></div>
+    </div>
+  </div>
+</header>
+
+<main class="contenedor" id="cita">
+  <div class="tarjeta">
+
+    <!-- ===================== PEDIR CITA ===================== -->
+    <section id="seccion-cita">
+      <div id="exito" role="status" aria-live="polite">
+        <div class="palomita"><svg viewBox="0 0 24 24"><path d="M5 12.5l5 5L19.5 7"/></svg></div>
+        <h2>¡Solicitud enviada!</h2>
+        <p class="sub">Recibimos tu solicitud. Te contactaremos para confirmar tu cita.</p>
+        <div class="resumen" id="resumenExito"></div>
+        <p class="sub">Folio de tu solicitud: <b id="folioTexto"></b><br>Guárdalo: con él puedes ver en esta página si ya la aceptamos.</p>
+        <button type="button" class="primario" id="verEstado">Ver el estado de mi solicitud</button>
+        <button type="button" class="secundario" id="otra">Pedir otra cita</button>
+      </div>
+
+      <div class="formulario-grid" id="contenidoForm">
+        <form id="form" novalidate autocomplete="on">
+          <h2>Datos de tu cita</h2>
+          <p class="sub">Los campos con * son obligatorios.</p>
+          <div class="alerta mal" id="alerta" role="alert"></div>
+          <div class="sesion-banner" id="sesionBanner" hidden>
+            <span id="sesionTexto"></span>
+            <button type="button" class="enlace" id="sesionOtros">Usar otros datos</button>
+          </div>
+
+          <div class="campo">
+            <label for="nombre">Nombre completo *</label>
+            <input id="nombre" name="nombre" maxlength="80" autocomplete="name" placeholder="Ej. María Hernández López">
+            <div class="error" id="e-nombre"></div>
+          </div>
+          <div class="fila">
+            <div class="campo">
+              <label for="telefono">Teléfono (10 dígitos) *</label>
+              <input id="telefono" name="telefono" inputmode="numeric" maxlength="14" autocomplete="tel-national" placeholder="2281234567">
+              <div class="error" id="e-telefono"></div>
+            </div>
+            <div class="campo">
+              <label for="email">Correo <span class="op">(opcional)</span></label>
+              <input id="email" name="email" type="email" maxlength="100" autocomplete="email" placeholder="tucorreo@ejemplo.com">
+              <div class="error" id="e-email"></div>
+            </div>
+          </div>
+          <div class="fila">
+            <div class="campo">
+              <label for="fecha">Día que prefieres *</label>
+              <input id="fecha" name="fecha" type="date">
+              <div class="error" id="e-fecha"></div>
+            </div>
+            <div class="campo">
+              <label for="hora">Hora que prefieres *</label>
+              <select id="hora" name="hora"></select>
+              <div class="error" id="e-hora"></div>
+              <div class="sub" id="aviso-hora" style="font-size:13px;margin:5px 0 0"></div>
+            </div>
+          </div>
+          <div class="campo">
+            <label for="tipo">Tipo de atención *</label>
+            <select id="tipo" name="tipo"></select>
+          </div>
+          <div class="campo">
+            <label for="motivo">¿Cuál es el motivo de tu consulta? *</label>
+            <textarea id="motivo" name="motivo" maxlength="500" placeholder="Cuéntanos brevemente qué molestia o necesidad tienes"></textarea>
+            <div class="error" id="e-motivo"></div>
+          </div>
+          <div class="trampa" aria-hidden="true"><label>No llenes este campo<input id="sitio" name="sitio" tabindex="-1" autocomplete="off"></label></div>
+          <label class="consentimiento" for="acepto">
+            <input type="checkbox" id="acepto">
+            <span>Acepto que mis datos se usen únicamente para agendar y confirmar mi cita.</span>
+          </label>
+          <div class="error" id="e-acepto" style="margin:-14px 0 14px"></div>
+          <button type="submit" class="enviar" id="enviar">Enviar solicitud</button>
+        </form>
+
+        <aside class="lateral">
+          <h3>¿Cómo funciona?</h3>
+          <div class="paso"><div class="num">1</div><div><b>Llena el formulario</b><span>Elige el día y la hora que mejor te acomoden.</span></div></div>
+          <div class="paso"><div class="num">2</div><div><b>Revisamos tu solicitud</b><span>Verificamos la disponibilidad de la agenda.</span></div></div>
+          <div class="paso"><div class="num">3</div><div><b>Te confirmamos</b><span>Consulta el estado con tu folio y, al aceptarla, entra a «Mi cuenta» con tu ID de paciente y tu teléfono.</span></div></div>
+          <div class="contacto" id="contacto"></div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ===================== CONSULTAR SOLICITUD ===================== -->
+    <section id="seccion-consulta" hidden>
+      <div class="angosto">
+        <h2>Consultar mi solicitud</h2>
+        <p class="sub">Escribe el folio que te dimos al enviar tu solicitud.</p>
+        <form id="formFolio" novalidate>
+          <div class="campo">
+            <label for="folio">Folio</label>
+            <input id="folio" autocomplete="off" placeholder="Ej. MVZTXMCYHWU6" maxlength="40">
+          </div>
+          <div class="alerta mal" id="alertaFolio" role="alert"></div>
+          <button type="submit" class="enviar" id="btnFolio">Consultar</button>
+        </form>
+        <div class="estado-caja" id="estadoCaja" hidden></div>
+      </div>
+    </section>
+
+    <!-- ===================== MI CUENTA ===================== -->
+    <section id="seccion-cuenta" hidden>
+      <div id="loginCaja" class="angosto">
+        <h2>Mi cuenta</h2>
+        <p class="sub">Entra con tu ID de paciente y tu teléfono para ver tus citas, cancelarlas o cambiar su fecha.<br>
+          Tu ID te lo damos al aceptar tu primera solicitud o al registrarte en el consultorio (ej. <b>pac0012</b>).</p>
+        <form id="formLogin" novalidate>
+          <div class="campo">
+            <label for="idPaciente">ID de paciente</label>
+            <input id="idPaciente" autocomplete="username" placeholder="pac0012" maxlength="20">
+          </div>
+          <div class="campo">
+            <label for="telLogin">Teléfono (10 dígitos)</label>
+            <input id="telLogin" inputmode="numeric" autocomplete="tel-national" placeholder="2281234567" maxlength="14">
+          </div>
+          <div class="alerta mal" id="alertaLogin" role="alert"></div>
+          <button type="submit" class="enviar" id="btnLogin">Entrar</button>
+        </form>
+      </div>
+
+      <div id="cuentaCaja" hidden>
+        <div class="cuenta-cab">
+          <div><h2 id="holaNombre">Hola</h2><p class="sub" id="holaId" style="margin:0"></p></div>
+          <div><button type="button" class="secundario" id="btnActualizar">Actualizar</button> <button type="button" class="secundario" id="btnSalir">Cerrar sesión</button></div>
+        </div>
+        <div class="alerta ok" id="alertaCuenta" role="status"></div>
+        <div class="avisos" id="avisos"></div>
+        <h3>Próximas citas</h3>
+        <div class="citas" id="proximas"></div>
+        <h3>Historial</h3>
+        <div class="citas" id="historial"></div>
+        <p class="sub" style="font-size:13px">Las cancelaciones y cambios los revisa el consultorio y se reflejan aquí en unos minutos.</p>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <span id="pie">© Ayuda de hermano a hermano</span><br>
+  <span id="pieContacto"></span><br>
+  El horario que eliges es una preferencia: tu cita queda confirmada hasta que te contactemos.
+</footer>
+
+<!-- Ventana emergente (cancelar / cambiar) -->
+<div class="modal" id="modal" role="dialog" aria-modal="true">
+  <div class="caja">
+    <h3 id="modalTitulo"></h3>
+    <p class="sub" id="modalTexto" style="margin-bottom:6px"></p>
+    <p class="sub" id="modalNota" style="font-size:13px;margin:0 0 12px"></p>
+    <div id="modalCampos" hidden>
+      <div class="campo"><label for="mFecha">Nuevo día</label><input id="mFecha" type="date"></div>
+      <div class="campo"><label for="mHora">Nueva hora</label><select id="mHora"></select><div class="sub" id="avisoMHora" style="font-size:13px;margin:5px 0 0"></div></div>
+    </div>
+    <div class="alerta mal" id="alertaModal" role="alert"></div>
+    <div class="botones">
+      <button type="button" class="secundario" id="mCerrar">Volver</button>
+      <button type="button" class="primario" id="mConfirmar">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================================================
+ CONFIGURACIÓN  (lo único que necesitas editar)
+ 1. Firebase Console → ⚙ Configuración del proyecto → General:
+      PROJECT_ID = «ID del proyecto»     API_KEY = «Clave de API web»
+ 2. Ajusta horarios, tipos de atención y datos de contacto si lo necesitas.
+====================================================================== -->
+<script>
+const CONFIG = {
+  PROJECT_ID: "clinica-92e5d",
+  API_KEY: "AIzaSyDrCInWIQZFVnSpk3S_LtMM-Gjnthp2lR8",
+  COLECCION: "solicitudes_citas",          // solicitudes nuevas (las ve la pantalla «Solicitudes en línea»)
+  ORGANIZACION: "Ayuda de hermano a hermano",
+  HORAS: ["08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00"],
+  DIAS_NO_ATIENDE: [0],                    // 0 = domingo, 6 = sábado… (quita o agrega números)
+  DIAS_ADELANTE: 90,                       // hasta cuántos días en el futuro se puede pedir
+  TIPOS: ["Primera consulta", "Consulta de seguimiento", "Auriculoterapia", "No estoy seguro(a)"],
+  // ============ NÚMERO DE LA EMPRESA (escríbelo aquí; también se puede cambiar desde el sistema de escritorio) ============
+  TELEFONO: "2281251214",                          // 10 dígitos, sin espacios. Ej. "2281234567"  → aparece el botón «Llamar»
+  WHATSAPP: "2281251214",                          // 10 dígitos. Ej. "2281234567"  → aparece el botón «WhatsApp» (si lo dejas vacío no se muestra)
+  HORARIO: "Lunes a sábado de 8:00 a 19:00",                           // Ej. "Lunes a sábado de 8:00 a 19:00"
+  LADA_PAIS: "52",                         // 52 = México (para el enlace de WhatsApp)
+  // ========================================================================================================================
+  CONTACTO: "",                            // (opcional) texto libre extra, Ej. "También por correo: contacto@ejemplo.com"
+  HORAS_ANTICIPACION: 24,                  // horas mínimas antes de la cita para cancelarla o cambiarla desde la página (con menos, deben llamar)
+  MAX_SOLICITUDES_POR_HORA: 3              // límite sencillo por navegador contra abusos
+};
+</script>
+<script>
+(function () {
+  "use strict";
+  const BASE = (window.FIRESTORE_BASE || "https://firestore.googleapis.com");
+  const $ = (id) => document.getElementById(id);
+  const sinConfigurar = !CONFIG.PROJECT_ID || CONFIG.PROJECT_ID.startsWith("TU_") || !CONFIG.API_KEY || CONFIG.API_KEY.startsWith("TU_");
+  const abierta = Date.now();
+  const DOCS = BASE + "/v1/projects/" + encodeURIComponent(CONFIG.PROJECT_ID) + "/databases/(default)/documents";
+
+  // ---------- Fechas (siempre en hora local, sin desfases de zona horaria) ----------
+  const dos = (n) => String(n).padStart(2, "0");
+  const aIso = (d) => d.getFullYear() + "-" + dos(d.getMonth() + 1) + "-" + dos(d.getDate());
+  const ahoraLocal = () => { const d = new Date(); return aIso(d) + "T" + dos(d.getHours()) + ":" + dos(d.getMinutes()) + ":" + dos(d.getSeconds()); };
+  const deIso = (s) => { const [a, m, d] = s.split("-").map(Number); return new Date(a, m - 1, d); };
+  const a12 = (h) => { const [hh, mm] = h.split(":").map(Number); return (hh % 12 || 12) + ":" + dos(mm) + " " + (hh < 12 ? "a. m." : "p. m."); };
+  const bonita = (iso) => {
+    const t = deIso(iso).toLocaleDateString("es-MX", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+    return t.charAt(0).toUpperCase() + t.slice(1);
+  };
+
+  // ---------- Contacto de la empresa (teléfono / WhatsApp / horario) ----------
+  const soloDig = (v) => String(v || "").replace(/\D/g, "");
+  const telBonito = (v) => { const d = soloDig(v); return d.length === 10 ? d.slice(0, 3) + " " + d.slice(3, 6) + " " + d.slice(6) : d; };
+  function enlaces() {                                   // botones de llamar / WhatsApp según lo configurado
+    const caja = document.createElement("div"); caja.className = "contacto-links";
+    const tel = soloDig(CONFIG.TELEFONO), wa = soloDig(CONFIG.WHATSAPP);
+    if (tel.length === 10) { const a = document.createElement("a"); a.href = "tel:+" + CONFIG.LADA_PAIS + tel; a.textContent = "Llamar " + telBonito(tel); caja.appendChild(a); }
+    if (wa.length === 10) { const a = document.createElement("a"); a.className = "wa"; a.target = "_blank"; a.rel = "noopener";
+      a.href = "https://wa.me/" + CONFIG.LADA_PAIS + wa + "?text=" + encodeURIComponent("Hola, necesito ayuda con mi cita."); a.textContent = "WhatsApp " + telBonito(wa); caja.appendChild(a); }
+    return caja;
+  }
+  function contactoNota() {                              // frase corta para los mensajes («llámanos: …»)
+    const tel = soloDig(CONFIG.TELEFONO), wa = soloDig(CONFIG.WHATSAPP);
+    const num = tel.length === 10 ? telBonito(tel) : wa.length === 10 ? "WhatsApp " + telBonito(wa) : "";
+    return [num, CONFIG.HORARIO, CONFIG.CONTACTO].filter(Boolean).join(" · ");
+  }
+  function pintarContacto() {
+    const tiene = soloDig(CONFIG.TELEFONO).length === 10 || soloDig(CONFIG.WHATSAPP).length === 10;
+    const c = $("contacto"); c.textContent = "";
+    if (tiene || CONFIG.HORARIO || CONFIG.CONTACTO) {
+      c.style.display = "";
+      const t = document.createElement("div"); t.textContent = "¿Dudas? Escríbenos o llámanos."; c.appendChild(t);
+      if (tiene) c.appendChild(enlaces());
+      if (CONFIG.HORARIO || CONFIG.CONTACTO) { const h = document.createElement("div"); h.style.marginTop = "8px"; h.textContent = [CONFIG.HORARIO, CONFIG.CONTACTO].filter(Boolean).join(" · "); c.appendChild(h); }
+    } else c.style.display = "none";
+    const hero = $("heroContacto"); hero.textContent = ""; hero.hidden = !tiene;
+    if (tiene) { hero.appendChild(enlaces()); if (CONFIG.HORARIO) { const s = document.createElement("small"); s.textContent = CONFIG.HORARIO; hero.appendChild(s); } }
+    $("pieContacto").textContent = tiene || CONFIG.HORARIO ? "Contacto: " + contactoNota() : "";
+  }
+  // Opciones de «Tipo de atención» y contacto configurados desde el sistema de escritorio (si no hay, se usan los de este archivo)
+  function llenarTipos() {
+    const previo = $("tipo").value; $("tipo").innerHTML = "";
+    CONFIG.TIPOS.forEach((t) => { const o = document.createElement("option"); o.value = t; o.textContent = t; $("tipo").appendChild(o); });
+    if (CONFIG.TIPOS.includes(previo)) $("tipo").value = previo;
+  }
+  async function cargarConfigWeb() {
+    if (sinConfigurar) return;
+    try {
+      const d = await leer("configuracion", "web");
+      if (!d) return;
+      if (Array.isArray(d.tipos) && d.tipos.length) { CONFIG.TIPOS = d.tipos.map(String); llenarTipos(); }
+      if (soloDig(d.telefono).length === 10) CONFIG.TELEFONO = d.telefono;
+      if (soloDig(d.whatsapp).length === 10) CONFIG.WHATSAPP = d.whatsapp;
+      if (d.horario) CONFIG.HORARIO = d.horario;
+      pintarContacto();
+    } catch (e) { /* sin configuración publicada: se usan los valores de este archivo */ }
+  }
+
+  // ---------- Horarios ocupados (los publica el consultorio día por día) ----------
+  const dispCache = {};
+  async function ocupadasDe(fecha) {                     // devuelve un arreglo de horas ocupadas ("10:00"…); si no se puede saber, []
+    if (!fecha || sinConfigurar) return [];
+    const c = dispCache[fecha];
+    if (c && Date.now() - c.t < 60000) return c.h;
+    let h = [];
+    try { const d = await leer("disponibilidad", fecha); h = d && Array.isArray(d.ocupadas) ? d.ocupadas : []; } catch (e) { h = []; }
+    dispCache[fecha] = { t: Date.now(), h };
+    return h;
+  }
+  // Llena el select de horas con las que no han pasado (ni están a menos de «desde») y no están ocupadas.
+  async function actualizarHoras(selFecha, sel, desde, aviso) {
+    const fecha = selFecha.value;
+    llenarHoras(selFecha, sel, desde);                   // primero lo que se sabe localmente (sin esperar a la red)
+    if (!fecha) { if (aviso) aviso.textContent = ""; return; }
+    const ocupadas = await ocupadasDe(fecha);
+    if (selFecha.value !== fecha) return;                // cambió de día mientras se consultaba
+    llenarHoras(selFecha, sel, desde, ocupadas);
+    if (aviso) aviso.textContent = sel.options.length <= 1 ? "No quedan horarios libres ese día. Elige otro día." : (ocupadas.length ? "Ya quitamos los horarios ocupados." : "");
+  }
+
+  // ---------- Anticipación mínima para cancelar o cambiar ----------
+  let ANT = CONFIG.HORAS_ANTICIPACION;                  // el consultorio puede publicar otro valor en la cuenta del paciente
+  const inicioCita = (fecha, hora) => { const d = deIso(fecha), [h, m] = hora.split(":").map(Number); d.setHours(h, m, 0, 0); return d; };
+  const horasPara = (fecha, hora) => (inicioCita(fecha, hora) - Date.now()) / 3600000;
+  const antTexto = () => ANT + (ANT === 1 ? " hora" : " horas");
+  const minCambio = () => new Date(Date.now() + ANT * 3600000);
+  const recordarFolio = (f) => { try { localStorage.setItem("ultimo_folio", f); } catch (e) { /* sin almacenamiento */ } };
+
+  // ---------- SHA-256 (el mismo código de acceso que calcula el sistema de escritorio) ----------
+  const K = [0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,
+    0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
+    0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,
+    0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
+    0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,
+    0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+  const ror = (x, n) => (x >>> n) | (x << (32 - n));
+  function sha256hex(texto) {
+    const bytes = new TextEncoder().encode(texto), l = bytes.length, largo = Math.ceil((l + 9) / 64) * 64;
+    const buf = new Uint8Array(largo); buf.set(bytes); buf[l] = 0x80;
+    const dv = new DataView(buf.buffer); dv.setUint32(largo - 8, Math.floor(l * 8 / 4294967296)); dv.setUint32(largo - 4, (l * 8) >>> 0);
+    let h = [0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+    const w = new Uint32Array(64);
+    for (let i = 0; i < largo; i += 64) {
+      for (let t = 0; t < 16; t++) w[t] = dv.getUint32(i + t * 4);
+      for (let t = 16; t < 64; t++) {
+        const s0 = ror(w[t - 15], 7) ^ ror(w[t - 15], 18) ^ (w[t - 15] >>> 3), s1 = ror(w[t - 2], 17) ^ ror(w[t - 2], 19) ^ (w[t - 2] >>> 10);
+        w[t] = (w[t - 16] + s0 + w[t - 7] + s1) >>> 0;
+      }
+      let [a, b, c, d, e, f, g, k] = h;
+      for (let t = 0; t < 64; t++) {
+        const S1 = ror(e, 6) ^ ror(e, 11) ^ ror(e, 25), ch = (e & f) ^ (~e & g), t1 = (k + S1 + ch + K[t] + w[t]) >>> 0;
+        const S0 = ror(a, 2) ^ ror(a, 13) ^ ror(a, 22), mj = (a & b) ^ (a & c) ^ (b & c), t2 = (S0 + mj) >>> 0;
+        k = g; g = f; f = e; e = (d + t1) >>> 0; d = c; c = b; b = a; a = (t1 + t2) >>> 0;
+      }
+      h = [h[0] + a, h[1] + b, h[2] + c, h[3] + d, h[4] + e, h[5] + f, h[6] + g, h[7] + k].map((x) => x >>> 0);
+    }
+    return h.map((x) => x.toString(16).padStart(8, "0")).join("");
+  }
+  window.__sha256hex = sha256hex;                       // (se usa en las pruebas)
+  const codigoDe = (id, tel) => sha256hex(id.trim().toLowerCase() + "|" + tel.replace(/\D/g, ""));
+
+  // ---------- Firestore (API REST) ----------
+  const campoTexto = (v) => ({ stringValue: String(v) });
+  function deFs(v) {
+    if (!v) return null;
+    if ("stringValue" in v) return v.stringValue;
+    if ("integerValue" in v) return Number(v.integerValue);
+    if ("doubleValue" in v) return v.doubleValue;
+    if ("booleanValue" in v) return v.booleanValue;
+    if ("timestampValue" in v) return v.timestampValue;
+    if ("mapValue" in v) { const o = {}; for (const [k, x] of Object.entries(v.mapValue.fields || {})) o[k] = deFs(x); return o; }
+    if ("arrayValue" in v) return (v.arrayValue.values || []).map(deFs);
+    return null;
+  }
+  const deDoc = (d) => { const o = {}; for (const [k, x] of Object.entries(d.fields || {})) o[k] = deFs(x); return o; };
+  async function leer(col, id) {
+    const r = await fetch(DOCS + "/" + encodeURIComponent(col) + "/" + encodeURIComponent(id) + "?key=" + encodeURIComponent(CONFIG.API_KEY));
+    if (r.status === 404) return null;
+    if (!r.ok) { const e = new Error("HTTP " + r.status); e.status = r.status; e.col = col; throw e; }
+    return deDoc(await r.json());
+  }
+  async function crear(col, id, campos) {
+    const url = DOCS + "/" + encodeURIComponent(col) + "?documentId=" + encodeURIComponent(id) + "&key=" + encodeURIComponent(CONFIG.API_KEY);
+    const f = {}; for (const [k, v] of Object.entries(campos)) f[k] = campoTexto(v);
+    const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ fields: f }) });
+    if (!r.ok) {
+      let detalle = ""; try { detalle = (await r.json()).error.message; } catch (e) { /* sin detalle */ }
+      const err = new Error(detalle || ("HTTP " + r.status)); err.status = r.status; err.col = col; throw err;
+    }
+  }
+  const nuevoId = (pre) => pre + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  const msgError = (e, tipo) => e.status === 403 ? "No tenemos permiso para " + tipo + " (reglas de la base" + (e.col ? ": " + e.col : "") + "). Avisa al consultorio."
+    : e.status === 400 ? "Revisa los datos e intenta de nuevo." : "No pudimos conectar. Revisa tu conexión e intenta de nuevo.";
+  function alerta(id, msg, ok) { const a = $(id); a.textContent = msg || ""; a.classList.toggle("visible", !!msg); if (ok !== undefined) { a.classList.toggle("ok", !!ok); a.classList.toggle("mal", !ok); } }
+
+  // ---------- Secciones ----------
+  function mostrar(seccion) {
+    for (const s of ["cita", "consulta", "cuenta"]) $("seccion-" + s).hidden = s !== seccion;
+    document.querySelectorAll(".pestanas button").forEach((b) => b.classList.toggle("activa", b.dataset.seccion === seccion));
+    const t = { cita: ["Agenda tu cita sin llamadas ni filas", "Déjanos tus datos y el horario que prefieres. Nuestro equipo revisa tu solicitud y te confirma por teléfono o WhatsApp."],
+      consulta: ["¿Ya pediste tu cita?", "Escribe tu folio para ver si ya la aceptamos."],
+      cuenta: ["Tu cuenta de paciente", "Consulta tus citas, cancélalas o cambia su fecha."] }[seccion];
+    $("tituloHero").textContent = t[0]; $("textoHero").textContent = t[1];
+  }
+  document.querySelectorAll(".pestanas button").forEach((b) => b.addEventListener("click", () => mostrar(b.dataset.seccion)));
+
+  // ---------- Preparar pantalla ----------
+  $("nombreOrg").textContent = CONFIG.ORGANIZACION;
+  document.title = "Citas en línea · " + CONFIG.ORGANIZACION;
+  $("pie").textContent = "© " + new Date().getFullYear() + " " + CONFIG.ORGANIZACION;
+  pintarContacto();
+  if (sinConfigurar) $("avisoConfig").style.display = "block";
+  llenarTipos(); cargarConfigWeb();
+
+  const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+  const limite = new Date(hoy); limite.setDate(limite.getDate() + CONFIG.DIAS_ADELANTE);
+  for (const id of ["fecha", "mFecha"]) { $(id).min = aIso(hoy); $(id).max = aIso(limite); }
+
+  function llenarHoras(selFecha, sel, desde, ocupadas) {   // desde: no se ofrecen horas anteriores a ese momento (por omisión, ahora)
+    const previa = sel.value, limiteHora = desde || new Date();
+    sel.innerHTML = '<option value="">Elige una hora</option>';
+    CONFIG.HORAS.forEach((h) => {
+      if (selFecha.value && inicioCita(selFecha.value, h) <= limiteHora) return;
+      if (ocupadas && ocupadas.includes(h)) return;
+      const o = document.createElement("option"); o.value = h; o.textContent = a12(h); sel.appendChild(o);
+    });
+    if ([...sel.options].some((o) => o.value === previa)) sel.value = previa;
+  }
+  llenarHoras($("fecha"), $("hora")); $("fecha").addEventListener("change", () => actualizarHoras($("fecha"), $("hora"), null, $("aviso-hora")));
+  llenarHoras($("mFecha"), $("mHora")); $("mFecha").addEventListener("change", () => actualizarHoras($("mFecha"), $("mHora"), minCambio(), $("avisoMHora")));
+
+  // ---------- Validación ----------
+  function marcar(id, msg) {
+    const campo = $(id), e = $("e-" + id);
+    if (campo) campo.classList.toggle("invalido", !!msg);
+    if (e) e.textContent = msg || "";
+    return !msg;
+  }
+  function fechaValida(valor) {
+    if (!valor) return "Elige un día.";
+    const d = deIso(valor);
+    if (d < hoy) return "Elige una fecha que no haya pasado.";
+    if (d > limite) return "Solo puedes pedir citas con " + CONFIG.DIAS_ADELANTE + " días de anticipación.";
+    if (CONFIG.DIAS_NO_ATIENDE.includes(d.getDay())) return "Ese día no hay atención. Elige otro.";
+    return "";
+  }
+  function validar() {
+    let ok = true;
+    const nombre = $("nombre").value.trim().replace(/\s+/g, " ");
+    ok = marcar("nombre", nombre.length < 3 || !/\S+\s+\S+/.test(nombre) ? "Escribe tu nombre y apellido." : "") && ok;
+    ok = marcar("telefono", !/^\d{10}$/.test($("telefono").value.replace(/\D/g, "")) ? "Escribe los 10 dígitos de tu teléfono." : "") && ok;
+    const mail = $("email").value.trim();
+    ok = marcar("email", mail && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(mail) ? "Revisa tu correo." : "") && ok;
+    ok = marcar("fecha", fechaValida($("fecha").value)) && ok;
+    ok = marcar("hora", !$("hora").value ? "Elige una hora." : "") && ok;
+    ok = marcar("motivo", $("motivo").value.trim().length < 5 ? "Cuéntanos brevemente el motivo." : "") && ok;
+    ok = marcar("acepto", !$("acepto").checked ? "Necesitamos tu autorización para continuar." : "") && ok;
+    return ok;
+  }
+
+  // ---------- Límite sencillo contra abusos ----------
+  function limiteAlcanzado(clave) {
+    try { return JSON.parse(localStorage.getItem(clave) || "[]").filter((t) => Date.now() - t < 3600000).length >= CONFIG.MAX_SOLICITUDES_POR_HORA; } catch (e) { return false; }
+  }
+  function recordarEnvio(clave) {
+    try { const m = JSON.parse(localStorage.getItem(clave) || "[]").filter((t) => Date.now() - t < 3600000); m.push(Date.now()); localStorage.setItem(clave, JSON.stringify(m)); } catch (e) { /* sin almacenamiento */ }
+  }
+
+  // ---------- 1) Pedir cita ----------
+  let ultimoFolio = "";
+  $("form").addEventListener("submit", async (ev) => {
+    ev.preventDefault(); alerta("alerta", "");
+    if ($("sitio").value) return;
+    if (!validar()) { const p = document.querySelector("#form .invalido"); if (p) p.focus(); return; }
+    if (sinConfigurar) { alerta("alerta", "La página aún no está conectada a Firebase. Avisa al administrador.", false); return; }
+    if (Date.now() - abierta < 3000) { alerta("alerta", "Un momento… intenta de nuevo en unos segundos.", false); return; }
+    if (limiteAlcanzado("solicitudes")) { alerta("alerta", "Ya enviaste varias solicitudes. Espera un rato o llámanos directamente.", false); return; }
+    const d = { nombre: $("nombre").value.trim().replace(/\s+/g, " "), telefono: $("telefono").value.replace(/\D/g, ""), email: $("email").value.trim(),
+      fecha: $("fecha").value, hora: $("hora").value, tipo: $("tipo").value, motivo: $("motivo").value.trim() };
+    const boton = $("enviar"); boton.disabled = true; boton.textContent = "Enviando…";
+    try {
+      const id = nuevoId("web");
+      await crear(CONFIG.COLECCION, id, { nombre: d.nombre, telefono: d.telefono, email: d.email, fecha: d.fecha, hora: d.hora, tipo_atencion: d.tipo,
+        motivo: d.motivo, estado: "Pendiente", creada: ahoraLocal(), origen: "web" });
+      try {   // estado público de la solicitud (para consultarla con el folio); si falla, la solicitud ya quedó guardada
+        await crear("estado_solicitudes", id, { estado: "Pendiente", nombre: d.nombre, fecha: d.fecha, hora: d.hora, tipo_atencion: d.tipo,
+          mensaje: "Recibimos tu solicitud. Te contactaremos para confirmarla.", paciente_id: "", cita_id: "", actualizado: ahoraLocal() });
+      } catch (e) { console.warn("No se pudo publicar el estado:", e); }
+      recordarEnvio("solicitudes");
+      ultimoFolio = id.replace(/^web/, "").toUpperCase(); recordarFolio(ultimoFolio);
+      $("resumenExito").innerHTML = "";
+      [["Nombre", d.nombre], ["Día", bonita(d.fecha)], ["Hora", a12(d.hora)], ["Atención", d.tipo]].forEach(([k, v]) => {
+        const f = document.createElement("div"), a = document.createElement("span"), b = document.createElement("b");
+        a.textContent = k; b.textContent = v; f.append(a, b); $("resumenExito").appendChild(f);
+      });
+      $("folioTexto").textContent = ultimoFolio;
+      $("contenidoForm").style.display = "none"; $("exito").style.display = "block";
+      $("exito").scrollIntoView({ behavior: "smooth", block: "center" });
+    } catch (e) {
+      alerta("alerta", msgError(e, "guardar tu solicitud"), false);
+      console.error("Error al enviar la solicitud:", e);
+    } finally { boton.disabled = false; boton.textContent = "Enviar solicitud"; }
+  });
+  $("otra").addEventListener("click", () => {
+    $("form").reset(); llenarHoras($("fecha"), $("hora")); $("aviso-hora").textContent = ""; prellenar();
+    $("exito").style.display = "none"; $("contenidoForm").style.display = "grid";
+  });
+  $("verEstado").addEventListener("click", () => { $("folio").value = ultimoFolio; mostrar("consulta"); consultarFolio(); });
+  document.querySelectorAll("#form input,#form select,#form textarea").forEach((el) => el.addEventListener("input", () => {
+    if (el.classList.contains("invalido")) { el.classList.remove("invalido"); const e = $("e-" + el.id); if (e) e.textContent = ""; }
+  }));
+
+  // ---------- 2) Consultar solicitud con el folio ----------
+  async function consultarFolio() {
+    alerta("alertaFolio", ""); $("estadoCaja").hidden = true;
+    let f = $("folio").value.trim().toLowerCase().replace(/[^a-z0-9]/g, "");
+    if (f.length < 6) { alerta("alertaFolio", "Escribe el folio completo.", false); return; }
+    if (!f.startsWith("web")) f = "web" + f;
+    if (sinConfigurar) { alerta("alertaFolio", "La página aún no está conectada a Firebase.", false); return; }
+    $("btnFolio").disabled = true; $("btnFolio").textContent = "Consultando…";
+    try {
+      const s = await leer("estado_solicitudes", f);
+      if (!s) { alerta("alertaFolio", "No encontramos ese folio. Revisa que esté completo.", false); return; }
+      recordarFolio(f.replace(/^web/, "").toUpperCase());
+      const caja = $("estadoCaja"); caja.innerHTML = "";
+      const chip = document.createElement("span"); chip.className = "chip " + s.estado; chip.textContent = s.estado;
+      const t = document.createElement("h3"); t.style.margin = "10px 0 4px"; t.textContent = s.nombre;
+      const p1 = document.createElement("p"); p1.className = "sub"; p1.style.margin = "0 0 10px";
+      p1.textContent = "Pediste: " + bonita(s.fecha) + " a las " + a12(s.hora) + " · " + s.tipo_atencion;
+      const p2 = document.createElement("p"); p2.style.margin = "0"; p2.textContent = s.mensaje || "";
+      caja.append(chip, t, p1, p2);
+      if (s.estado === "Aceptada" && s.paciente_id) {
+        const b = document.createElement("button"); b.type = "button"; b.className = "primario"; b.style.marginTop = "14px"; b.textContent = "Entrar a mi cuenta";
+        b.addEventListener("click", () => { salir(); $("idPaciente").value = s.paciente_id; mostrar("cuenta"); $("telLogin").focus(); });
+        caja.appendChild(b);
+      }
+      caja.hidden = false;
+    } catch (e) { alerta("alertaFolio", msgError(e, "consultar tu solicitud"), false); console.error(e); }
+    finally { $("btnFolio").disabled = false; $("btnFolio").textContent = "Consultar"; }
+  }
+  $("formFolio").addEventListener("submit", (ev) => { ev.preventDefault(); consultarFolio(); });
+
+  // ---------- Datos precargados cuando el paciente inició sesión (el formulario sigue abierto para otras personas) ----------
+  function prellenar() {
+    const b = $("sesionBanner");
+    if (!sesion || sesion.otros) { b.hidden = true; return; }
+    if (sesion.nombre) $("nombre").value = sesion.nombre;
+    if (sesion.tel) $("telefono").value = sesion.tel;
+    if (sesion.email) $("email").value = sesion.email;
+    $("sesionTexto").textContent = "Pides la cita como " + sesion.nombre + " (ID " + sesion.id + "). Ya llenamos tus datos.";
+    b.hidden = false;
+  }
+  $("sesionOtros").addEventListener("click", () => {      // para pedir cita a nombre de otra persona
+    if (sesion) sesion.otros = true;
+    try { if (sesion) sessionStorage.setItem("sesion", JSON.stringify(sesion)); } catch (e) { /* sin almacenamiento */ }
+    for (const id of ["nombre", "telefono", "email"]) $(id).value = "";
+    $("sesionBanner").hidden = true; $("nombre").focus();
+  });
+
+  // ---------- 3) Mi cuenta ----------
+  let sesion = null;                                   // { codigo, id, tel, nombre, email, otros }
+  // (clave distinta a la del límite de envíos, que guarda una lista de horas)
+  const marcas = () => { try { const m = JSON.parse(localStorage.getItem("cambios_pendientes") || "{}"); return m && typeof m === "object" && !Array.isArray(m) ? m : {}; } catch (e) { return {}; } };
+  const guardarMarcas = (m) => { try { localStorage.setItem("cambios_pendientes", JSON.stringify(m)); } catch (e) { /* sin almacenamiento */ } };
+
+  async function entrar(codigo, silencioso, tel) {
+    const doc = await leer("portal", codigo);
+    if (!doc) { if (!silencioso) alerta("alertaLogin", "No encontramos tu cuenta. Revisa tu ID y tu teléfono. Si te acaban de registrar, el consultorio debe publicar tu acceso: avísales.", false); return false; }
+    sesion = { codigo, id: doc.paciente_id, tel: tel || (sesion && sesion.tel) || "", nombre: doc.nombre || "", email: doc.email || "", otros: !!(sesion && sesion.codigo === codigo && sesion.otros) };
+    try { sessionStorage.setItem("sesion", JSON.stringify(sesion)); } catch (e) { /* sin almacenamiento */ }
+    pintarCuenta(doc);
+    prellenar();
+    return true;
+  }
+
+  function pintarCuenta(doc) {
+    if (Number.isFinite(doc.anticipacion_horas) && doc.anticipacion_horas >= 0) ANT = doc.anticipacion_horas;
+    $("loginCaja").hidden = true; $("cuentaCaja").hidden = false;
+    $("holaNombre").textContent = "Hola, " + doc.nombre; $("holaId").textContent = "ID de paciente: " + doc.paciente_id + " · actualizado " + (doc.actualizado || "").replace("T", " ").slice(0, 16);
+    alerta("alertaCuenta", "");
+    // avisos recientes
+    const av = $("avisos"); av.innerHTML = "";
+    (doc.avisos || []).slice().reverse().forEach((a) => {
+      const d = document.createElement("div"); d.className = "aviso"; d.textContent = a.texto;
+      const s = document.createElement("small"); s.textContent = (a.fecha || "").replace("T", " ").slice(0, 16); d.appendChild(s); av.appendChild(d);
+    });
+    // las marcas de "cambio solicitado" se quitan cuando el consultorio ya actualizó la cuenta
+    const m = marcas(); let cambio = false;
+    for (const [cid, x] of Object.entries(m)) if ((doc.actualizado || "") > x.ts) { delete m[cid]; cambio = true; }
+    if (cambio) guardarMarcas(m);
+    const hoyIso = aIso(new Date());
+    const proximas = (doc.citas || []).filter((c) => c.fecha >= hoyIso && c.estado !== "Cancelada").sort((a, b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora));
+    const pasadas = (doc.citas || []).filter((c) => !(c.fecha >= hoyIso && c.estado !== "Cancelada"));
+    const rev = {}; (Array.isArray(doc.en_revision) ? doc.en_revision : []).forEach((x) => { if (x && x.cita_id) rev[x.cita_id] = x; });
+    pintarLista($("proximas"), proximas, m, "No tienes citas próximas. Puedes pedir una en la pestaña «Pedir cita».", rev);
+    pintarLista($("historial"), pasadas, m, "Aún no hay historial.", rev);
+  }
+
+  function pintarLista(caja, citas, marcasPend, vacio, enRev) {
+    enRev = enRev || {};
+    caja.innerHTML = "";
+    if (!citas.length) { const v = document.createElement("div"); v.className = "vacio"; v.textContent = vacio; caja.appendChild(v); return; }
+    citas.forEach((c) => {
+      const el = document.createElement("div"); el.className = "cita" + (c.fecha < aIso(new Date()) ? " pasada" : "");
+      const q = document.createElement("div"); q.className = "quien";
+      const b = document.createElement("b"); b.textContent = bonita(c.fecha) + " · " + a12(c.hora);
+      const s = document.createElement("span"); s.textContent = (c.motivo || "Consulta") + " · " + c.id;
+      if (c.folio) { const fo = document.createElement("span"); fo.className = "folio-chip"; fo.textContent = "Folio " + c.folio; s.appendChild(fo); }
+      q.append(b, s);
+      const ac = document.createElement("div"); ac.className = "acciones";
+      const chip = document.createElement("span"); chip.className = "chip " + c.estado; chip.textContent = c.estado; ac.appendChild(chip);
+      if (marcasPend[c.id] || enRev[c.id]) {
+        const tipo = (marcasPend[c.id] || enRev[c.id]).tipo;
+        const p = document.createElement("span"); p.className = "chip Pendiente"; p.textContent = tipo === "cancelar" ? "Cancelación en revisión" : "Cambio en revisión"; ac.appendChild(p);
+        const r = enRev[c.id];
+        if (r && r.fecha_nueva) { const n = document.createElement("span"); n.className = "nota"; n.textContent = "Pediste: " + bonita(r.fecha_nueva) + " · " + a12(r.hora_nueva) + ". El consultorio debe confirmarlo."; ac.appendChild(n); }
+      } else if (c.cancelable && horasPara(c.fecha, c.hora) >= ANT) {
+        const r = document.createElement("button"); r.type = "button"; r.className = "secundario"; r.textContent = "Cambiar fecha";
+        r.addEventListener("click", () => abrirModal(c, "reprogramar"));
+        const x = document.createElement("button"); x.type = "button"; x.className = "secundario peligro"; x.textContent = "Cancelar";
+        x.addEventListener("click", () => abrirModal(c, "cancelar"));
+        ac.append(r, x);
+      } else if (["Programada", "Reprogramada"].includes(c.estado) && c.fecha >= aIso(new Date())) {
+        const n = document.createElement("span"); n.className = "nota";
+        n.textContent = horasPara(c.fecha, c.hora) < ANT
+          ? "Faltan menos de " + antTexto() + ": para cambiarla o cancelarla llámanos" + (contactoNota() ? " (" + contactoNota() + ")." : ".")
+          : "Este cambio no está disponible en línea. Llámanos para ayudarte.";
+        ac.appendChild(n);
+      }
+      el.append(q, ac); caja.appendChild(el);
+    });
+  }
+
+  $("formLogin").addEventListener("submit", async (ev) => {
+    ev.preventDefault(); alerta("alertaLogin", "");
+    const id = $("idPaciente").value.trim(), tel = $("telLogin").value.replace(/\D/g, "");
+    if (!/^[A-Za-z0-9]{3,20}$/.test(id) || tel.length !== 10) { alerta("alertaLogin", "Escribe tu ID de paciente y los 10 dígitos de tu teléfono.", false); return; }
+    if (sinConfigurar) { alerta("alertaLogin", "La página aún no está conectada a Firebase.", false); return; }
+    $("btnLogin").disabled = true; $("btnLogin").textContent = "Entrando…";
+    try { await entrar(codigoDe(id, tel), false, tel); }
+    catch (e) { alerta("alertaLogin", msgError(e, "entrar a tu cuenta"), false); console.error(e); }
+    finally { $("btnLogin").disabled = false; $("btnLogin").textContent = "Entrar"; }
+  });
+  function salir() {
+    const habia = sesion; sesion = null; try { sessionStorage.removeItem("sesion"); } catch (e) { /* nada */ }
+    if (habia && !habia.otros) { for (const id of ["nombre", "telefono", "email"]) $(id).value = ""; }
+    prellenar();
+    $("cuentaCaja").hidden = true; $("loginCaja").hidden = false; $("formLogin").reset(); alerta("alertaLogin", "");
+  }
+  $("btnSalir").addEventListener("click", salir);
+  $("btnActualizar").addEventListener("click", async () => {
+    if (!sesion) return;
+    try { await entrar(sesion.codigo, true); alerta("alertaCuenta", "Información actualizada.", true); } catch (e) { alerta("alertaCuenta", msgError(e, "actualizar"), false); }
+  });
+
+  // ---------- Ventana: cancelar o cambiar una cita ----------
+  let pendiente = null;                                // { cita, tipo }
+  function abrirModal(c, tipo) {
+    pendiente = { cita: c, tipo }; alerta("alertaModal", "");
+    $("modalTitulo").textContent = tipo === "cancelar" ? "¿Cancelar tu cita?" : "Cambiar fecha u hora";
+    $("modalTexto").textContent = "Tu cita actual: " + bonita(c.fecha) + " a las " + a12(c.hora);
+    $("modalNota").textContent = "Para evitar cambios de último momento, cancelar o cambiar una cita se puede hacer hasta " + antTexto() + " antes.";
+    $("modalCampos").hidden = tipo === "cancelar";
+    $("mConfirmar").textContent = tipo === "cancelar" ? "Sí, cancelar mi cita" : "Solicitar el cambio";
+    $("mConfirmar").className = tipo === "cancelar" ? "primario peligro-fondo" : "primario";
+    if (tipo !== "cancelar") {
+      const min = minCambio(); $("mFecha").min = aIso(min); $("mFecha").value = ""; $("avisoMHora").textContent = "";
+      llenarHoras($("mFecha"), $("mHora"), min);
+    }
+    $("modal").classList.add("abierto");
+  }
+  const cerrarModal = () => { $("modal").classList.remove("abierto"); pendiente = null; };
+  $("mCerrar").addEventListener("click", cerrarModal);
+  $("modal").addEventListener("click", (e) => { if (e.target === $("modal")) cerrarModal(); });
+  $("mConfirmar").addEventListener("click", async () => {
+    if (!pendiente || !sesion) return;
+    const { cita, tipo } = pendiente;
+    if (horasPara(cita.fecha, cita.hora) < ANT) { alerta("alertaModal", "Ya faltan menos de " + antTexto() + " para tu cita. Llámanos para ayudarte.", false); return; }
+    if (tipo === "reprogramar") {
+      const msg = fechaValida($("mFecha").value);
+      if (msg) { alerta("alertaModal", msg, false); return; }
+      if (!$("mHora").value) { alerta("alertaModal", "Elige una hora.", false); return; }
+      if (inicioCita($("mFecha").value, $("mHora").value) < minCambio()) { alerta("alertaModal", "Elige un horario con al menos " + antTexto() + " de anticipación.", false); return; }
+      if ($("mFecha").value === cita.fecha && $("mHora").value === cita.hora) { alerta("alertaModal", "Elige un día u hora distintos a los actuales.", false); return; }
+    }
+    if (limiteAlcanzado("cambios")) { alerta("alertaModal", "Ya enviaste varios cambios. Espera un rato o llámanos.", false); return; }
+    const boton = $("mConfirmar"); boton.disabled = true;
+    try {
+      await crear("cambios_citas", nuevoId("cam"), { portal: sesion.codigo, paciente_id: sesion.id, cita_id: cita.id, tipo,
+        fecha_nueva: tipo === "cancelar" ? "" : $("mFecha").value, hora_nueva: tipo === "cancelar" ? "" : $("mHora").value, estado: "Pendiente", creada: ahoraLocal() });
+      recordarEnvio("cambios");
+      const m = marcas(); m[cita.id] = { tipo, ts: ahoraLocal() }; guardarMarcas(m);
+      cerrarModal();
+      const doc = await leer("portal", sesion.codigo).catch(() => null);
+      if (doc) pintarCuenta(doc);
+      alerta("alertaCuenta", "Listo: recibimos tu solicitud. El consultorio la revisa y se verá reflejada aquí en unos minutos.", true);
+    } catch (e) {
+      let m = msgError(e, "enviar tu solicitud");
+      if (e.status === 403) {                          // ¿la cita dejó de ser modificable o es un problema de reglas?
+        const doc = await leer("portal", sesion.codigo).catch(() => null);
+        if (doc && !(doc.cancelables || []).includes(cita.id)) { m = "Esta cita ya no se puede cambiar desde la página. Llámanos para ayudarte."; pintarCuenta(doc); }
+      }
+      alerta("alertaModal", m, false); console.error(e);
+    } finally { boton.disabled = false; }
+  });
+
+  // Si ya había iniciado sesión en esta pestaña, se recupera
+  try {
+    const guardada = JSON.parse(sessionStorage.getItem("sesion") || "null");
+    if (guardada && !sinConfigurar) { entrar(guardada.codigo, true, guardada.tel).catch(() => {}); }
+  } catch (e) { /* sin sesión previa */ }
+  try { const f = localStorage.getItem("ultimo_folio"); if (f) $("folio").value = f; } catch (e) { /* sin almacenamiento */ }
+  if (location.hash === "#cuenta") mostrar("cuenta"); else if (location.hash === "#consulta") mostrar("consulta");
+})();
+</script>
+<style>.peligro-fondo{background:var(--error)!important}.peligro-fondo:hover{background:#A33A3A!important}</style>
+</body>
+</html>
